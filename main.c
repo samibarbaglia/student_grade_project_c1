@@ -27,4 +27,5 @@ int main() {
         scanf("%d", &student_score);
     }
 
+
 }
