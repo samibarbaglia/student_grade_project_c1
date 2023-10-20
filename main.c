@@ -1,109 +1,183 @@
-// TO DO: avg grade calculating, file printing, formatting
-// error/security/user-friendliness (aka no letters in int, no numbers in char)
+// TO DO: final check
 // fucking ville
 
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
-#define MAX_CHARACTERS 40
-#define MAX_SUBJECTS 30
+#define MAX_CHARACTERS_NAME 100 // max. length of student names
+#define MAX_CHARACTERS_COURSE 40 // max. length of course names
+#define MAX_SUBJECTS 30 // max. amount of courses
 
 
-struct Student {
-    char name[MAX_CHARACTERS];
-    char subjects[MAX_SUBJECTS][MAX_CHARACTERS];
+typedef struct Student {
+    char name[MAX_CHARACTERS_NAME];
+    char courses[MAX_SUBJECTS][MAX_CHARACTERS_COURSE];
     int scores[MAX_SUBJECTS];
-    int num_subjects;
-    int grade[MAX_SUBJECTS];
+    int num_of_courses;
+    int grades[MAX_SUBJECTS];
     struct Student *next;
-};
+} Student;
 
-// have to use *student bc othervice can't modify struct, pointers can
-void grade_calculator(struct Student *student, int i) {
+
+// calculate individual grades for the percentage scores
+void grade_calculator(Student *student, int i) {
     if (student->scores[i] < 50) {
-        student->grade[i] = 0;
+        student->grades[i] = 0;
     } else if (student->scores[i] < 60) {
-        student->grade[i] = 1;
+        student->grades[i] = 1;
     } else if (student->scores[i] < 70) {
-        student->grade[i] = 2;
+        student->grades[i] = 2;
     } else if (student->scores[i] < 80) {
-        student->grade[i] = 3;
+        student->grades[i] = 3;
     } else if (student->scores[i] < 90) {
-        student->grade[i] = 4;
+        student->grades[i] = 4;
     } else {
-        student->grade[i] = 5;
+        student->grades[i] = 5;
     }
 }
 
-// no need to make into pointer, will directly save and no modify
-void subject_print(struct Student *student) {
-    for (int i = 0; i < student->num_subjects; i++) {
-        printf("%s %d%% %d\n", student->subjects[i], student->scores[i], student->grade[i]);
+
+double calculate_final_avg(Student student) {
+    double final_grade = 0;
+    for (int i = 0; i < student.num_of_courses; i++) {
+        final_grade += student.grades[i];
+    }
+    return (final_grade / student.num_of_courses);
+}
+
+
+// print course names, scores, and that course's grade from arrays together
+void subject_print(Student student) {
+    printf("%-40s %8s %8s\n", "Subject", "Score", "Grade");
+    printf("------------------------------------------------------------\n");
+
+    for (int i = 0; i < student.num_of_courses; i++) {
+        printf("%-40s %8d%% %8d\n", student.courses[i], student.scores[i], student.grades[i]);
     }
 }
 
-void print_all(struct Student *student, int avg) {
-    printf("------------------------------------------\n"
-           "Student: %s\n", student->name);
-    printf("------------------------------------------\n"
-           "Subject Score Grade\n");
-    printf("------------------------------------------\n");
+
+// prints terminal output
+void print_all(Student student) {
+    printf("------------------------------------------------------------\n");
+    printf("Student: %s\n", student.name);
+    printf("------------------------------------------------------------\n");
     subject_print(student);
     printf("\n");
-    printf("Average Grade: %d\n", (avg / student->num_subjects)); /* AVG BIG NUMBER GRADE, NOT THIS!!*/
-    printf("------------------------------------------\n");
+    printf("Average Grade: %.2f\n", (calculate_final_avg(student)));
+    printf("------------------------------------------------------------\n");
+    printf("\n");
+}
+
+void print_all_file(Student student) {
+    FILE *student_file = fopen("student_info2.txt", "w");
+
+    if (student_file == NULL) {
+        perror("UNABLE TO CREATE FILE\n");
+        return;
+    }
+
+    fprintf(student_file, "------------------------------------------------------------\n");
+    fprintf(student_file, "Student: %s\n", student.name);
+    fprintf(student_file, "------------------------------------------------------------\n");
+    fprintf(student_file, "%-40s %8s %8s\n", "Subject", "Score", "Grade");
+    fprintf(student_file,"------------------------------------------------------------\n");
+    for (int i = 0; i < student.num_of_courses; i++) {
+        fprintf(student_file, "%-40s %8d%% %8d\n", student.courses[i], student.scores[i], student.grades[i]);
+    }
+    fprintf(student_file, "\n");
+    fprintf(student_file, "Average Grade: %.2f\n", (calculate_final_avg(student)));
+    fprintf(student_file, "------------------------------------------------------------\n");
+
+    fclose(student_file);
 }
 
 //NOT ALL IS CLEARED YET
-void clear_list(struct Student *head) {
+void clear_list(Student *head) {
     while (head != NULL) {
-        struct Student *temp = head;
-        head = (head)->next;
+        Student *temp = head;
+        head = (Student *) head->next;
 
         free(temp->name);
 
-        for (int i = 0; i < temp->num_subjects; i++) {
-            free(temp->subjects[i]);
+        for (int i = 0; i < temp->num_of_courses; i++) {
+            free(temp->courses[i]);
         }
         free(temp->scores);
-        temp->num_subjects = 0;
+        temp->num_of_courses = 0;
         free(temp);
 
     }
 }
 
 
-
+// MAIN PROGRAM STARTS HERE
 int main() {
-    struct Student student; // declare/initialize struct instance
-    int avg = 0;
-    struct Student *head = NULL;
+    Student student;
+    Student *head = NULL;
+    int valid_input = 0;
 
-    printf("Welcome to the Student Grade Calculator!\n"
-           "Enter your name: \n");
-    fgets(student.name, sizeof(student.name), stdin);
+    printf("Welcome to the Student Grade Calculator!\n");
+
+    // double prints below "how many subjects""invalid input" if longer than 100 char
+    printf("Please enter your name: \n");
+    fgets(student.name, MAX_CHARACTERS_NAME, stdin);
     student.name[strcspn(student.name, "\n")] = '\0';
 
-    printf("How many subjects do you want to calculate grades for? \n");
-    scanf("%d", &student.num_subjects);
-    while (getchar() != '\n');
-
-//NEEDS TO GIVE ERROR MESSAGE FOR INCORRECR INPUT ETC
-    for (int i = 0; i < student.num_subjects; i++) {
+    // WORKS (modify variable valid input)
+    while (!valid_input) {
         printf("\n");
-        printf("Enter subject %d name: \n", i+1);
-        fgets(student.subjects[i], sizeof(student.subjects[i]), stdin);
-        student.subjects[i][strcspn(student.subjects[i], "\n")] = '\0';
-
-        printf("Enter your percentage for %s (0-100): \n", student.subjects[i]);
-        scanf("%d", &student.scores[i]);
-        while (getchar() != '\n');
-        grade_calculator(&student, i);
-        avg = (avg + student.scores[i]);
+        printf("How many subjects do you want to calculate grades for? \n");
+        if (scanf("%d", &student.num_of_courses) != 1) {
+            printf("Invalid, please enter in numbers\n");
+            while (getchar() != '\n');
+        } else {
+            while (getchar() != '\n');
+            valid_input = 1;
+        }
     }
 
-    print_all(&student, avg);
+// will not know what to do if prefecntage more than 100
+    for (int i = 0; i < student.num_of_courses; i++) {
+
+        // WORKS WITH TOO MANY CHAR, double enter with less
+        printf("Enter subject %d name: \n", i + 1);
+        fgets(student.courses[i], MAX_CHARACTERS_COURSE, stdin);
+        size_t len = strlen(student.courses[i]);
+
+        if (len > 0 && student.courses[i][len - 1] == '\n') {
+            student.courses[i][len - 1] = '\0';
+        } else {
+            while (getchar() != '\n');
+        }
+
+        valid_input = 0;
+        int score;
+
+        while (!valid_input) {
+            printf("Enter your percentage for %s (0-100): \n", student.courses[i]);
+
+            if (scanf("%d", &score) != 1) {
+                printf("Invalid input. Please enter number between 0 and 100\n");
+                while (getchar() != '\n');
+            } else if (score < 0 || score > 100) {
+                printf("INVALID. Enter between 100 and 0\n");
+            } else {
+                student.scores[i] = score;
+                valid_input = 1;
+            }
+        }
+
+        while (getchar() != '\n');
+        grade_calculator(&student, i);
+    }
+
+    print_all_file(student);
+    print_all(student);
     clear_list(head);
 
+    printf("NOTE: Information above is also copied to a newly created file student_info.txt\n");
+
+    return 0;
 }
