@@ -16,7 +16,7 @@ typedef struct Student {
     int scores[MAX_SUBJECTS];
     int num_of_courses;
     int grades[MAX_SUBJECTS];
-    struct Student *next;
+    struct Student *next; // for emptying allocated memory + possibility for multiple students?
 } Student;
 
 
@@ -70,6 +70,7 @@ void print_all(Student student) {
     printf("\n");
 }
 
+
 void print_all_file(Student student) {
     FILE *student_file = fopen("student_info2.txt", "w");
 
@@ -93,21 +94,20 @@ void print_all_file(Student student) {
     fclose(student_file);
 }
 
-//NOT ALL IS CLEARED YET
+
+// empty allocated memory to prevent memory leak
 void clear_list(Student *head) {
     while (head != NULL) {
         Student *temp = head;
-        head = (Student *) head->next;
-
-        free(temp->name);
+        head = head->next;
 
         for (int i = 0; i < temp->num_of_courses; i++) {
             free(temp->courses[i]);
         }
-        free(temp->scores);
-        temp->num_of_courses = 0;
-        free(temp);
 
+        free(temp->name);
+        free(temp->scores);
+        free(temp);
     }
 }
 
