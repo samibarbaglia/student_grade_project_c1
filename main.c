@@ -103,6 +103,7 @@ int main() {
 }
 
 
+
 // calculate individual grades for the percentage scores
 void grade_calculator(Student *student, int i) {
     if (student->scores[i] < 50) {
@@ -120,7 +121,7 @@ void grade_calculator(Student *student, int i) {
     }
 }
 
-// calculates final avarage score for student between 0-5
+// calculates final average score for student between 0-5
 double calculate_final_avg(Student student) {
     double final_grade = 0;
     for (int i = 0; i < student.num_of_courses; i++) {
@@ -157,7 +158,7 @@ void write_into_file(Student student) {
     FILE *student_file = fopen("student_info2.txt", "w");
 
     if (student_file == NULL) {
-        perror("UNABLE TO CREATE FILE\n");
+        fprintf(stderr, "UNABLE TO CREATE FILE\n");
         return;
     }
 
