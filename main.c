@@ -16,7 +16,6 @@ typedef struct Student {
     struct Student *next; // for emptying allocated memory + possibility for multiple students?
 } Student;
 
-
 // function declarations
 void grade_calculator(Student *student, int i);
 
@@ -44,7 +43,12 @@ int main() {
     // double prints below "how many subjects""invalid input" if longer than 100 char
     printf("Please enter your name: \n");
     fgets(student.name, MAX_CHARACTERS_NAME, stdin);
-    student.name[strcspn(student.name, "\n")] = '\0';
+    size_t lent = strlen(student.name);
+    if (lent > 0 && student.name[lent - 1] == '\n') {
+        student.name[lent - 1] = '\0';
+    } else {
+        while (getchar() != '\n');
+    }
 
     // saves number of subjects to struct and checks that user enters numbers and not text
     while (!is_input_valid) {
