@@ -1,0 +1,6 @@
+For a course project I made a student grade calculator. 
+The program first asks the user to insert name of the student, then the course and grade. 
+When the user is done, the calculator makes a file where it showcases all the courses and their grades and the final GPA. 
+This same text is also printed on the console
+
+Implemented using C.
